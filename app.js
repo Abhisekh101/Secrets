@@ -12,6 +12,7 @@ app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set("view engine", "ejs");
 import "dotenv/config";
+import res from "express/lib/response";
 // here the session code goes
 app.use(
   session({
@@ -45,8 +46,15 @@ UserSchema.plugin(passportLocalMongoose);
 const User = mongoose.model("User", UserSchema);
 // configuring the passport-local
 passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+// passport.serializeUser(User.serializeUser());
+// passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function (User, done) {
+  done(null, User);
+});
+
+passport.deserializeUser(function (User, done) {
+  done(null, User);
+});
 // !finish here
 // route
 app.get("/", (request, response) => {
@@ -64,6 +72,11 @@ app.get("/secrets", (request, response) => {
   } else {
     response.redirect("/login");
   }
+});
+// log-out
+app.get("/logout", (request, response) => {
+  request.logout();
+  res.redirect("/");
 });
 // handling the post requests
 app.post("/register", (request, response) => {
@@ -83,7 +96,21 @@ app.post("/register", (request, response) => {
   );
 });
 // login
-app.post("/login", (request, response) => {});
+app.post("/login", (request, response) => {
+  const user = new User({
+    email: request.body.username,
+    password: request.body.password,
+  });
+  request.login(user, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      passport.authenticate("local")(request, response, () => {
+        response.redirect("/secrets");
+      });
+    }
+  });
+});
 // Starting out the server here
 const PORT = 1337 || 3000;
 app.listen(PORT, () => console.log(`Sucessfully Started at ${PORT}`));
