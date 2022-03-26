@@ -12,7 +12,6 @@ app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set("view engine", "ejs");
 import "dotenv/config";
-import res from "express/lib/response";
 // here the session code goes
 app.use(
   session({
@@ -76,7 +75,7 @@ app.get("/secrets", (request, response) => {
 // log-out
 app.get("/logout", (request, response) => {
   request.logout();
-  res.redirect("/");
+  response.redirect("/");
 });
 // handling the post requests
 app.post("/register", (request, response) => {
